@@ -1,0 +1,678 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <script data-require="angular.js@1.6.5" data-semver="1.6.5" src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.6.5/angular.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+    <link href="./style.css" rel="stylesheet" />
+
+    <script src="./site.js"></script>
+    <script src="./drag-and-drop-lists.js"></script>
+</head>
+<body>
+    <div style="margin-left:10px" ng-app="demo">
+        <div ng-controller="DemoController">
+            <div class="modal fade" id="myModal" role="dialog">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">Skip Logic Questions</h4>
+                        </div>
+                        <div class="modal-body">
+                            <ul>
+                                <li ng-repeat="element in models.parentContainer.columns" ng-if="element.id != models.selected.id && models.setParentContainer(models.selected.id)" ng-hide="element.isSubquestion">
+                                    <input type="checkbox" ng-model="element.isSubquestion" ng-click="models.attachQuestion(element)" name="selectQuestionCheckBox" id="{{element.id}}" />
+                                    <label for="{{element.id}}">{{element.name}}</label>
+                                </li>
+                                <li ng-repeat="element in models.dropzones.Form" ng-if="element.id != models.selected.id && !models.setParentContainer(models.selected.id)" ng-hide="element.isSubquestion">
+                                    <input type="checkbox" ng-model="element.isSubquestion" ng-click="models.attachQuestion(element)" name="selectQuestionCheckBox" id="{{element.id}}" />
+                                    <label for="{{element.id}}">{{element.name}}</label>
+                                </li>
+                                <span>Selected Questins : </span>
+                                <li ng-repeat="element in models.selectedSkipLogicOption.skipLogicQuestion">
+                                    <input type="checkbox" ng-model="element.isSubquestion" ng-click="models.attachQuestion(element)" name="selectQuestionCheckBox" id="{{element.id}}" />
+                                    <label for="{{element.id}}">{{element.name}}</label>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <script type="text/ng-template" id="items.html">
+                <div ng-if="item.type == 'text'" class="panel panel-default">
+                    <button type="button" class="btn delete-btn " style="  padding: 4px 7px;" ng-click="models.deleteElement(item.id)"><i class="fa fa-trash" aria-hidden="true"></i></button>
+                    <button type="button" class="btn copy-btn" style="  padding: 4px 7px;" ng-click="models.copyElement(item)"><i class="fa fa-clone" aria-hidden="true"></i></button>
+                    <label for="item.id">{{element.name}}</label><span class="required" ng-if="item.Feild.Required"> *</span>
+                    <input type="{{element.type}}" class="" id="item.id" placeholder="input" ng-click="models.showProperties()">
+                </div>
+                <div ng-if="item.type == 'name'" class="panel panel-default">
+                    <button type="button" class="btn delete-btn name-btns" style="  padding: 4px 7px;" ng-click="models.deleteElement(item.id)"><i class="fa fa-trash" aria-hidden="true"></i></button>
+                    <button type="button" class="btn copy-btn name-btns" style="padding: 4px 7px;" ng-click="models.copyElement(item)"><i class="fa fa-clone" aria-hidden="true"></i></button>
+                    <div ng-click="models.showProperties()">
+                        <div>{{item.name}}</div><span class="required" ng-if="item.Feild.Required"> *</span>
+                        <label for="first_name"> First Name : </label> <input type="text" id="first_name" style="margin-right:60px;" />
+                        <label for="last_name"> Last Name : </label> <input type="text" id="last_name" />
+                    </div>
+                </div>
+
+                <div ng-if="item.type == 'number'" class="panel panel-default">
+                    <button type="button" class="btn delete-btn number-btns " style="  padding: 4px 7px;" ng-click="models.deleteElement(item.id)"><i class="fa fa-trash" aria-hidden="true"></i></button>
+                    <button type="button" class="btn copy-btn number-btns" style="  padding: 4px 7px;" ng-click="models.copyElement(item)"><i class="fa fa-clone" aria-hidden="true"></i></button>
+                    <label for="item.id">{{item.name}}</label> <span class="required" ng-if="item.Feild.Required"> *</span>
+                    <input type="{{item.type}}" class="" id="item.id" ng-click="models.showProperties()">
+                    <p class="text-center">{{item.supportingText}}</p>
+                </div>
+                <div ng-if="item.type == 'checkbox'" class="panel panel-default">
+                    <button type="button" class="btn delete-btn " style="  padding: 4px 7px;" ng-click="models.deleteElement(item.id)"><i class="fa fa-trash" aria-hidden="true"></i></button>
+                    <button type="button" class="btn copy-btn" style="  padding: 4px 7px;" ng-click="models.copyElement(item)"><i class="fa fa-clone" aria-hidden="true"></i></button>
+                    <div id="checkboxOptions" style="width: 19em;" ng-click="models.showProperties()">
+                        <input type="checkbox" id="option.id" name="CheckBoxOption" />
+                        <label for="item.id">{{item.name}}</label> <span class="required" ng-if="item.Feild.Required"> *</span>
+                    </div>
+                </div>
+                <div ng-if="item.type == 'checkboxList'" class="panel panel-default">
+                    <button type="button" class="btn delete-btn checkboxList-btns " style="  padding: 4px 7px;" ng-click="models.deleteElement(item.id)"><i class="fa fa-trash" aria-hidden="true"></i></button>
+                    <button type="button" class="btn copy-btn checkboxList-btns " style="  padding: 4px 7px;" ng-click="models.copyElement(item)"><i class="fa fa-clone" aria-hidden="true"></i></button>
+                    <div id="checkboxOptions" style="width: 19em;" ng-click="models.showProperties()">
+                        <div>{{item.name}}</div> <span class="required" ng-if="item.Feild.Required"> *</span>
+                        <ul ng-if="item.layout == 'Vertical'">
+                            <li ng-repeat="option in item.options">
+                                <input type="checkbox" id="option.id" name="CheckBoxOption" />
+                                <label for="item.id">{{option.name}}</label>
+                            </li>
+                            <li ng-if="item.Feild.AddCheckAll">
+                                <input type="checkbox" id="checkAll" name="CheckAll"/>
+                                <label for="checkAll">Check all</label>
+                            </li>
+                        </ul>
+                        <div ng-if="item.layout == 'Horizontal'">
+                            <span ng-repeat="option in item.options">
+                                <input type="radio" id="option.id" name="CheckBoxOption" />
+                                <label for="option.id"> {{option.name}} </label>
+                            </span>
+                            <span ng-if="item.Feild.AddCheckAll">  
+                                <input type="checkbox" id="checkAll" name="CheckAll"/>
+                                <label for="checkAll">Check all</label>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div ng-if="item.type == 'radio'" class="panel panel-default">
+                    <button type="button" class="btn delete-btn radio-btn-bottom" style="  padding: 4px 7px;" ng-click="models.deleteElement(item.id)"><i class="fa fa-trash" aria-hidden="true"></i></button>
+                    <button type="button" class="btn copy-btn radio-btn-bottom" style="  padding: 4px 7px;" ng-click="models.copyElement(item)"><i class="fa fa-clone" aria-hidden="true"></i></button>
+                    <div id="radioBtn" style="width: 19em;" ng-click="models.showProperties()">
+                        <div>{{item.name}}</div><span class="required" ng-if="item.Feild.Required"> *</span>
+                        <ul ng-if="item.layout == 'Vertical'">
+                            <li ng-repeat="option in item.options">
+                                <input type="radio" id="option.id" name="RadioOption" />
+                                <label for="option.id"> {{option.name}} </label>
+                            </li>
+                        </ul>
+                        <div ng-if="item.layout == 'Horizontal'">
+                            <span ng-repeat="option in item.options">
+                                <input type="radio" id="option.id" name="RadioOption" />
+                                <label for="option.id"> {{option.name}} </label>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div ng-if="item.type == 'dropdown'" class="panel panel-default">
+                    <button type="button" class="btn delete-btn " style="  padding: 4px 7px;" ng-click="models.deleteElement(item.id)"><i class="fa fa-trash" aria-hidden="true"></i></button>
+                    <button type="button" class="btn copy-btn" style="  padding: 4px 7px;" ng-click="models.copyElement(item)"><i class="fa fa-clone" aria-hidden="true"></i></button>
+                    <label for="item.id">{{item.name}}</label><span class="required" ng-if="item.Feild.Required"> *</span>
+                    <select name="{{item.name}}" id="item.id" ng-click="models.showProperties()">
+                        <option id="option.id" name="dropDownOption" ng-repeat="option in item.options">{{option.name}}</option>
+                        <br />
+                    </select>
+                </div>
+                <div ng-if="item.type == 'signature'" class="panel panel-default">
+                    <button type="button" class="btn delete-btn signature-btns " style="  padding: 4px 7px;" ng-click="models.deleteElement(item.id)"><i class="fa fa-trash" aria-hidden="true"></i></button>
+                    <button type="button" class="btn copy-btn signature-btns " style="  padding: 4px 7px;" ng-click="models.copyElement(item)"><i class="fa fa-clone" aria-hidden="true"></i></button>
+                    <label for="item.id">{{item.name}}</label><span class="required" ng-if="item.Feild.Required"> *</span>
+                    <textarea id="item.id" rows="4" cols="50" ng-click="models.showProperties()" style="width:21em;"></textarea>
+                    <p class="text-center">{{item.supportingText}}</p>
+                </div>
+                <div ng-if="item.type == 'longtext'" class="panel panel-default">
+                    <button type="button" class="btn delete-btn long-text-btns" style="  padding: 4px 7px;" ng-click="models.deleteElement(item.id)"><i class="fa fa-trash" aria-hidden="true"></i></button>
+                    <button type="button" class="btn copy-btn long-text-btns" style="  padding: 4px 7px;" ng-click="models.copyElement(item)"><i class="fa fa-clone" aria-hidden="true"></i></button>
+                    <label for="item.id">{{item.name}}</label><span class="required" ng-if="item.Feild.Required"> *</span>
+                    <textarea id="item.id" rows="4" cols="50" ng-click="models.showProperties()" style="width:21em;" placeholder="{{item.placeholder}}"></textarea>
+                    <p class="text-center">{{item.supportingText}}</p>
+                </div>
+
+                <div ng-if="item.type == 'file'" class="panel panel-default">
+                    <button type="button" class="btn delete-btn file-upload-btns" style="  padding: 4px 7px;" ng-click="models.deleteElement(item.id)"><i class="fa fa-trash" aria-hidden="true"></i></button>
+                    <button type="button" class="btn copy-btn file-upload-btns" style="  padding: 4px 7px;" ng-click="models.copyElement(item)"><i class="fa fa-clone" aria-hidden="true"></i></button>
+                    <div ng-click="models.showProperties()">
+                        <div class="file-upload-div">
+                            <input type="file" file-model="myFile" ng-model="item.selected.fileName" />
+                            <button ng-click="uploadFile()">upload me</button>
+                        </div>
+                        <p class="text-center">{{item.supportingText}}</p>
+                    </div>
+                </div>
+
+                <div ng-if="item.type == 'dateTime'" ng-click="models.showProperties()" class="panel panel-default">
+                    <button type="button" class="btn delete-btn date-time-btns" style="  padding: 4px 7px;" ng-click="models.deleteElement(item.id)"><i class="fa fa-trash" aria-hidden="true"></i></button>
+                    <button type="button" class="btn copy-btn date-time-btns" style="  padding: 4px 7px;" ng-click="models.copyElement(item)"><i class="fa fa-clone" aria-hidden="true"></i></button>
+                    <label for="dateTime">{{item.name}}</label><span class="required" ng-if="item.Feild.Required"> *</span>
+                    <!--required pattern="[0-9]{2}-[0-9]{2}-[0-9]{2}"-->
+                    <input type="date" id="dateTime" name="dateTime" ng-pattern="/^([0-9]{2}[-/][0-9]{2}[-/][0-9]{4})|([0-9]{8})/">
+                    <p class="text-center">{{item.supportingText}}</p>
+                </div>
+
+                <div ng-if="item.type == 'address'" class="panel panel-default">
+                    <button type="button" class="btn delete-btn address-btns" style="  padding: 4px 7px;" ng-click="models.deleteElement(item.id)"><i class="fa fa-trash" aria-hidden="true"></i></button>
+                    <button type="button" class="btn copy-btn address-btns" style="  padding: 4px 7px;" ng-click="models.copyElement(item)"><i class="fa fa-clone" aria-hidden="true"></i></button>
+                    <div ng-click="models.showProperties()">
+                        <div class="name-div">{{item.name}}</div><span class="required" ng-if="item.Feild.Required"> *</span>
+                        <input type="text" id="addressLine1" style="width:100%;" />
+                        <label for="addressLine1" style="font-weight:100;">Address line 1</label>
+                        <input type="text" id="addressLine2" style="width:100%;" />
+                        <label for="addressLine2" style="font-weight:100;">Address line 2</label><br />
+                        <input type="text" id="city" style="width:45%; margin-right: 56px;" />
+                        <input type="text" id="state" style="width:45%;" /><br />
+                        <label for="city" style="font-weight:100; margin-right: 21.5em;">City</label>
+                        <label for="state" style="font-weight:100;">State / Region </label><br />
+                        <input type="text" id="zipCode" style="width:45%; margin-right: 56px;" />
+                        <input type="text" id="country" style="width:45%;" /><br />
+                        <label for="zipCode" style=" font-weight:100; margin-right: 15.7em;">Postal / Zip code</label>
+                        <label for="country" style="font-weight:100;">Country</label>
+                    </div>
+                </div>
+
+                <div ng-if="item.type == 'rating'" class="panel panel-default">
+                    <button type="button" class="btn delete-btn rating-btns" style="  padding: 4px 7px;" ng-click="models.deleteElement(item.id)"><i class="fa fa-trash" aria-hidden="true"></i></button>
+                    <button type="button" class="btn copy-btn rating-btns" style="  padding: 4px 7px;" ng-click="models.copyElement(item)"><i class="fa fa-clone" aria-hidden="true"></i></button>
+                    <div ng-click="models.showProperties()">
+                        <p>{{item.name}}</p><span class="required" ng-if="item.Feild.Required"> *</span>
+                        <fieldset class="rating" style="width:10em;">
+                            <input type="radio" id="star5" name="rating" value="5" /><label class="full" for="star5" title="Awesome - 5 stars"></label>
+                            <input type="radio" id="star4half" name="rating" value="4 and a half" /><label class="half" for="star4half" title="Pretty good - 4.5 stars"></label>
+                            <input type="radio" id="star4" name="rating" value="4" /><label class="full" for="star4" title="Pretty good - 4 stars"></label>
+                            <input type="radio" id="star3half" name="rating" value="3 and a half" /><label class="half" for="star3half" title="Meh - 3.5 stars"></label>
+                            <input type="radio" id="star3" name="rating" value="3" /><label class="full" for="star3" title="Meh - 3 stars"></label>
+                            <input type="radio" id="star2half" name="rating" value="2 and a half" /><label class="half" for="star2half" title="Kinda bad - 2.5 stars"></label>
+                            <input type="radio" id="star2" name="rating" value="2" /><label class="full" for="star2" title="Kinda bad - 2 stars"></label>
+                            <input type="radio" id="star1half" name="rating" value="1 and a half" /><label class="half" for="star1half" title="Meh - 1.5 stars"></label>
+                            <input type="radio" id="star1" name="rating" value="1" /><label class="full" for="star1" title="Sucks big time - 1 star"></label>
+                            <input type="radio" id="starhalf" name="rating" value="half" /><label class="half" for="starhalf" title="Sucks big time - 0.5 stars"></label>
+                        </fieldset>
+                    </div>
+                </div>
+
+
+            </script>
+            <script type="text/ng-template" id="subItems.html">
+                <div ng-if="subItem.type == 'text'" ng-click="models.showProperties()" class="panel panel-default">
+                    <button type="button" class="btn delete-btn " style="  padding: 4px 7px;" ng-click="models.deleteElement(item.id)"><i class="fa fa-trash" aria-hidden="true"></i></button>
+                    <button type="button" class="btn copy-btn" style="  padding: 4px 7px;" ng-click="models.copyElement(subItem)"><i class="fa fa-clone" aria-hidden="true"></i></button>
+                    <label for="{{subItem.id}}">{{subItem.name}}</label><span class="required" ng-if="subItem.Feild.Required"> *</span>
+                    <input type="{{subItem.type}}" class="" id="{{subItem.id}}" placeholder="input">
+                </div>
+                <div ng-if="subItem.type == 'number'" ng-click="models.showProperties()" class="panel panel-default">
+                    <button type="button" class="btn delete-btn number-btns " style="  padding: 4px 7px;" ng-click="models.deleteElement(item.id)"><i class="fa fa-trash" aria-hidden="true"></i></button>
+                    <button type="button" class="btn copy-btn number-btns" style="  padding: 4px 7px;" ng-click="models.copyElement(item.type)"><i class="fa fa-clone" aria-hidden="true"></i></button>
+                    <label for="{{subItem.id}}">{{subItem.name}}</label><span class="required" ng-if="subItem.Feild.Required"> *</span>
+                    <input type="{{subItem.type}}" class="" id="{{subItem.id}}">
+                    <p class="text-center">{{subItem.supportingText}}</p>
+                </div>
+                <div ng-if="subItem.type == 'checkbox'" ng-click="models.showProperties()" class="panel panel-default">
+                    <button type="button" class="btn delete-btn " style="  padding: 4px 7px;" ng-click="models.deleteElement(item.id)"><i class="fa fa-trash" aria-hidden="true"></i></button>
+                    <button type="button" class="btn copy-btn" style="  padding: 4px 7px;" ng-click="models.copyElement(item.type)"><i class="fa fa-clone" aria-hidden="true"></i></button>
+                    <div id="checkboxOptions" style="width: 19em;">
+                        <input type="checkbox" id="option.id" name="CheckBoxOption" />
+                        <label for="{{subItem.id}}">{{subItem.name}}</label> <span class="required" ng-if="subItem.Feild.Required"> *</span>
+                    </div>
+                </div>
+                <div ng-if="subItem.type == 'checkboxList'" ng-click="models.showProperties()" class="panel panel-default">
+                    <button type="button" class="btn delete-btn checkboxList-btns " style="  padding: 4px 7px;" ng-click="models.deleteElement(item.id)"><i class="fa fa-trash" aria-hidden="true"></i></button>
+                    <button type="button" class="btn copy-btn checkboxList-btns " style="  padding: 4px 7px;" ng-click="models.copyElement(item.type)"><i class="fa fa-clone" aria-hidden="true"></i></button>
+                    <div id="checkboxOptions" style="width: 19em;">
+                        <div>{{subItem.name}}</div><span class="required" ng-if="subItem.Feild.Required"> *</span>
+                        <ul ng-if="subItem.layout == 'Vertical'">
+                            <li ng-repeat="option in subItem.options">
+                                <input type="checkbox" id="option.id" name="CheckBoxOption" />
+                                <label for="{{subItem.id}}">{{option.name}}</label>
+                            </li>
+                        </ul>
+                        <div ng-if="subItem.layout == 'Horizontal'">
+                            <span ng-repeat="option in subItem.options">
+                                <input type="radio" id="option.id" name="CheckBoxOption" />
+                                <label for="option.id"> {{option.name}} </label>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div ng-if="subItem.type == 'radio'" ng-click="models.showProperties()" class="panel panel-default">
+                    <button type="button" class="btn delete-btn radio-btn-bottom" style="  padding: 4px 7px;" ng-click="models.deleteElement(item.id)"><i class="fa fa-trash" aria-hidden="true"></i></button>
+                    <button type="button" class="btn copy-btn radio-btn-bottom" style="  padding: 4px 7px;" ng-click="models.copyElement(item.type)"><i class="fa fa-clone" aria-hidden="true"></i></button>
+                    <div id="radioBtn" style="width: 19em;">
+                        <div>{{subItem.name}}</div><span class="required" ng-if="subItem.Feild.Required"> *</span>
+                        <ul ng-if="subItem.layout == 'Vertical'">
+                            <li ng-repeat="option in subItem.options">
+                                <input type="radio" id="option.id" name="RadioOption" />
+                                <label for="option.id"> {{option.name}} </label>
+                            </li>
+                        </ul>
+                        <div ng-if="subItem.layout == 'Horizontal'">
+                            <span ng-repeat="option in subItem.options">
+                                <input type="radio" id="option.id" name="RadioOption" />
+                                <label for="option.id"> {{option.name}} </label>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div ng-if="subItem.type == 'dropdown'" ng-click="models.showProperties()" class="panel panel-default">
+                    <button type="button" class="btn delete-btn " style="  padding: 4px 7px;" ng-click="models.deleteElement(item.id)"><i class="fa fa-trash" aria-hidden="true"></i></button>
+                    <button type="button" class="btn copy-btn" style="  padding: 4px 7px;" ng-click="models.copyElement(item.type)"><i class="fa fa-clone" aria-hidden="true"></i></button>
+                    <label for="{{subItem.id}}">{{subItem.name}}</label><span class="required" ng-if="subItem.Feild.Required"> *</span>
+                    <select name="{{subItem.name}}" id="{{subItem.id}}">
+                        <option id="option.id" name="dropDownOption" ng-repeat="option in subItem.options">{{option.name}}</option>
+                        <br />
+                    </select>
+                </div>
+                <div ng-if="subItem.type == 'signature'" ng-click="models.showProperties()" class="panel panel-default">
+                    <button type="button" class="btn delete-btn signature-btns " style="  padding: 4px 7px;" ng-click="models.deleteElement(item.id)"><i class="fa fa-trash" aria-hidden="true"></i></button>
+                    <button type="button" class="btn copy-btn signature-btns " style="  padding: 4px 7px;" ng-click="models.copyElement(item.type)"><i class="fa fa-clone" aria-hidden="true"></i></button>
+                    <label for="{{subItem.id}}">{{subItem.name}}</label><span class="required" ng-if="subItem.Feild.Required"> *</span>
+                    <textarea id="{{subItem.id}}" rows="4" cols="50" style="width:21em;"></textarea>
+                    <p class="text-center">{{subItem.supportingText}}</p>
+                </div>
+                <div ng-if="subItem.type == 'longtext'" ng-click="models.showProperties()" class="panel panel-default">
+                    <button type="button" class="btn delete-btn long-text-btns" style="  padding: 4px 7px;" ng-click="models.deleteElement(item.id)"><i class="fa fa-trash" aria-hidden="true"></i></button>
+                    <button type="button" class="btn copy-btn long-text-btns" style="  padding: 4px 7px;" ng-click="models.copyElement(item.type)"><i class="fa fa-clone" aria-hidden="true"></i></button>
+                    <label for="{{subItem.id}}">{{subItem.name}}</label><span class="required" ng-if="subItem.Feild.Required"> *</span>
+                    <textarea id="{{subItem.id}}" rows="4" cols="50" style="width:21em;" placeholder="{{subItem.placeholder}}"></textarea>
+                    <p class="text-center">{{subItem.supportingText}}</p>
+                </div>
+                <div ng-if="subItem.type == 'file'" ng-click="models.showProperties()" class="panel panel-default">
+                    <button type="button" class="btn delete-btn file-upload-btns" style="  padding: 4px 7px;" ng-click="models.deleteElement(item.id)"><i class="fa fa-trash" aria-hidden="true"></i></button>
+                    <button type="button" class="btn copy-btn file-upload-btns" style="  padding: 4px 7px;" ng-click="models.copyElement(item.type)"><i class="fa fa-clone" aria-hidden="true"></i></button>
+                    <div>
+                        <div class="file-upload-div">
+                            <input type="file" file-model="myFile" ng-model="subItem.selected.fileName" />
+                            <button ng-click="uploadFile()">upload me</button>
+                        </div>
+                        <p class="text-center">{{subItem.supportingText}}</p>
+                    </div>
+                </div>
+                <div ng-if="subItem.type == 'dateTime'" ng-click="models.showProperties()" class="panel panel-default">
+                    <button type="button" class="btn delete-btn date-time-btns" style="  padding: 4px 7px;" ng-click="models.deleteElement(item.id)"><i class="fa fa-trash" aria-hidden="true"></i></button>
+                    <button type="button" class="btn copy-btn date-time-btns" style="  padding: 4px 7px;" ng-click="models.copyElement(item.type)"><i class="fa fa-clone" aria-hidden="true"></i></button>
+                    <label for="dateTime">{{subItem.name}}</label><span class="required" ng-if="subItem.Feild.Required"> *</span>
+                    <!--required pattern="[0-9]{2}-[0-9]{2}-[0-9]{2}"-->
+                    <input type="date" id="dateTime" name="dateTime" ng-pattern="/^([0-9]{2}[-/][0-9]{2}[-/][0-9]{4})|([0-9]{8})/">
+                    <p class="text-center">{{subItem.supportingText}}</p>
+                </div>
+                <div ng-if="subItem.type == 'name'" class="panel panel-default">
+                    <button type="button" class="btn delete-btn name-btns" style="  padding: 4px 7px;" ng-click="models.deleteElement(item.id)"><i class="fa fa-trash" aria-hidden="true"></i></button>
+                    <button type="button" class="btn copy-btn name-btns" style="padding: 4px 7px;" ng-click="models.copyElement(item.type)"><i class="fa fa-clone" aria-hidden="true"></i></button>
+                    <div ng-click="models.showProperties()">
+                        <div>{{subItem.name}}</div><span class="required" ng-if="subItem.Feild.Required"> *</span>
+                        <label for="first_name"> First Name : </label> <input type="text" id="first_name" style="margin-right:60px;" />
+                        <label for="last_name"> Last Name : </label> <input type="text" id="last_name" />
+                    </div>
+                </div>
+            </script>
+            <script type="text/ng-template" id="list.html">
+                <ul dnd-list="lists" dnd-drop="models.dropCallback(index, item, external, type)">
+                    <li ng-repeat="item in lists" dnd-draggable="item" dnd-type="item.type" dnd-effect-allowed="move" dnd-moved="lists.splice($index, 1)" dnd-selected="models.selected = item" style="padding: 8px;">
+                        <div ng-include="'items.html'" ng-if="item.type !=container"></div>
+                        <div ng-if="item.type == 'container'" ng-click="models.showProperties()" style="border:1px solid black; min-height:50px; width:96%; margin:10px;">
+                            <button type="button" class="btn delete-btn container-delete-btn " style="  padding: 4px 7px;" ng-click="models.deleteElement(item.id)"><i class="fa fa-trash" aria-hidden="true"></i></button>
+                            <button type="button" class="btn copy-btn container-copy-btn" style="  padding: 4px 7px;"><i class="fa fa-clone" aria-hidden="true"></i></button>
+                            <div dnd-list="item.columns" dnd-drop="models.dropCallback(index, item, external, type)" style="min-height:50px;" ng-click="models.showProperties()">
+                                <div class="container-div"><label>{{item.name}}</label></div>
+                                <div ng-repeat="subItem in item.columns" dnd-draggable="subItem" dnd-moved="item.columns.splice($index, 1)" dnd-effect-allowed="move" dnd-selected="models.selected = subItem">
+                                    <div ng-include="'subItems.html'" style="padding: 8px; margin: 5px;"> </div>
+                                </div>
+                                <div class="dndPlaceholder">
+                                    <strong>Drop Any Row in Container</strong>
+                                </div>
+                            </div>
+                            <p class="text-center">{{item.supportingText}}</p>
+                        </div>
+                    </li>
+                    <li>
+                        <button type="submit" form="form1" value="Submit" style="margin: 15px 223px;" ng-click="models.submitForm()">Submit</button>
+                    </li>
+                </ul>
+            </script>
+            <!-- Main area with dropzones and source code -->
+            <div class="nestedDemo">
+                <!-- Sidebar -->
+                <div class="col-sm-3">
+                    <div class="toolbox box box-grey box-padding" style="">
+                        <h3>New Elements</h3>
+                        <div style=" height: 25em; overflow: scroll">
+                            <ul>
+                                <!-- The toolbox only allows to copy objects, not move it. After a new
+                                element was created, dnd-copied is invoked and we generate the next id -->
+                                <li ng-repeat="item in models.templates" dnd-draggable="item" dnd-effect-allowed="copy" dnd-copied="item.id = item.id + 1" dnd-type="item.type" class="element-div">
+                                    <input type="{{item.type}}" placeholder="input" style="padding:2px; width:60px;" id="{{item.id}}" />
+                                    <label for="{{item.id}}">{{item.label}}</label>
+                                </li>
+                                <!--<li ng-if="item.type == 'address'" ng-repeat="item in models.templates" dnd-draggable="item" dnd-effect-allowed="copy" dnd-copied="item.id = item.id + 1" dnd-type="item.type" class="element-div">
+                                    <label for="{{item.id}}"><i class="fa fa-address-card-o" aria-hidden="true"></i> {{item.label}}</label>
+                                </li>-->
+                            </ul>
+                        </div>
+                    </div>
+                    <!--<div class="trashcan box box-grey box-padding">
+                        <h3>Trashcan</h3>
+                        <ul dnd-list="[]">
+                            <li>
+                                <img class="trash-icon" src="Content/images/trashicon.png" />
+                            </li>
+                        </ul>
+                    </div>-->
+                </div>
+
+                <div class="col-sm-6">
+                    <div class="row">
+                        <div ng-repeat="(zone, lists) in models.dropzones" class="col-md-6" style="min-width: 100%;">
+                            <div class="dropzone box box-yellow">
+                                <!-- The dropzone also uses the list template -->
+                                <h3>{{zone}}</h3>
+                                <div ng-include="'list.html'"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-responsive row">
+                        <table class="table table-bordered">
+                            <thead>
+                            <td>name</td>
+                            <td>Question type</td>
+                            <td>options</td>
+                            <td>IsRequired</td>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="element in models.dropzones.Form">
+                                    <td>{{element.name}}</td>
+                                    <td>{{element.label}}</td>
+                                    <td><span ng-repeat="option in element.options">[ {{option.name}}] </span></td>
+                                    <td>{{element.Feild.Required}}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div view-source="nested"></div>
+                </div>
+
+
+                <div class="col-sm-3" ng-hide="models.isHidden">
+                    <div class="box box-grey box-padding">
+                        <h3>Please add attributes</h3>
+                        <div class="prop-div">
+                            <div class="prop-btn-div">
+                                <button type="button" style="margin: 5px;" ng-click="models.deleteElement(models.selected.id)">Delete</button>
+                                <button type="button" ng-click="models.hideProperties()">Close</button>
+                            </div>
+                            <div>Name: {{models.selected.name}}</div>
+                            <div ng-if="models.selected.type == 'text'">
+
+                                <div class="prop-title-div"> lable </div>
+                                <input type="text" placeholder="Name" ng-model="models.selected.name" />
+                                <div class="prop-title-div">Field Options </div>
+                                <span class="chk-box-width"><input type="checkbox" ng-model="models.selected.Feild.Required"> Required</span>
+                                <span class="chk-box-width"><input type="checkbox" ng-model="models.selected.Feild.Hidden"> Hidden </span>
+                                <span class="chk-box-width"><input type="checkbox" ng-model="models.selected.Feild.Hide"> Hide Label </span>
+                                <div class="prop-title-div"> Optional Sub-fields </div>
+                                <span class="chk-box-width"><input type="checkbox" ng-model="models.selected.SubFields.Suffix"> Suffix</span>
+                                <span class="chk-box-width"><input type="checkbox" ng-model="models.selected.SubFields.Prefix"> Prefix</span>
+                                <span class="chk-box-width"><input type="checkbox" ng-model="models.selected.SubFields.MiddleName"> Middle Name</span>
+                                <span class="chk-box-width"><input type="checkbox" ng-model="models.selected.SubFields.MiddleInitial"> Middle Initial</span>
+                            </div>
+                            <div ng-if="models.selected.type == 'number'">
+                                <label for="singleSelect"> Type: </label><br>
+                                <div class="prop-title-div"> lable </div>
+                                <input type="text" placeholder="Name" ng-model="models.selected.name" />
+                                <div class="prop-title-div">Field Options </div>
+                                <span class="chk-box-width"><input type="checkbox" ng-model="models.selected.Feild.Required"> Required</span>
+                                <span class="chk-box-width"><input type="checkbox" ng-model="models.selected.Feild.ReadOnly"> Read-Only </span>
+                                <span class="chk-box-width"><input type="checkbox" ng-model="models.selected.Feild.Hidden"> Hidden </span>
+                                <span class="chk-box-width"><input type="checkbox" ng-model="models.selected.Feild.Unique"> Unique </span>
+                                <span class="chk-box-width"><input type="checkbox" ng-model="models.selected.Feild.HideLabel"> Hide Label </span>
+                                <div>
+                                    <div class="prop-title-div">Supporting Text</div>
+                                    <input type="text" ng-model="models.selected.supportingText" />
+                                </div>
+                                <div>
+                                    <div class="prop-title-div">Placeholder</div>
+                                    <input type="text" ng-model="models.selected.placeholder" />
+                                </div>
+                                <div>
+                                    <div class="prop-title-div">Default Value</div>
+                                    <input type="text" ng-model="models.selected.defaultValue" />
+                                </div>
+                            </div>
+                            <div ng-if="models.selected.type == 'checkbox'">
+                                <div class="prop-title-div"> lable </div>
+                                <input type="text" placeholder="Name" ng-model="models.selected.name" />
+                                <div class="prop-title-div">Field Options </div>
+                                <div>
+                                    <span class="chk-box-width"><input type="checkbox" ng-model="models.selected.Feild.Required"> Required</span>
+                                    <span class="chk-box-width"><input type="checkbox" ng-model="models.selected.Feild.Hidden"> Hidden</span>
+                                    <span class="chk-box-width"><input type="checkbox" ng-model="models.selected.Feild.Unique"> Unique</span>
+                                    <span class="chk-box-width"><input type="checkbox" ng-model="models.selected.Feild.Hide"> Hide</span>
+                                </div>
+                                <div class="prop-title-div">Option Layout </div>
+                                <div>
+                                    <span class="chk-box-width"><input type="radio" ng-model="models.selected.layout" name="layoutType" value="Vertical"> Vertical : </span><br />
+                                    <span class="chk-box-width"><input type="radio" ng-model="models.selected.layout" name="layoutType" value="Horizontal"> Horizontal : </span><br />
+                                </div>
+                                <p class="prop-title-div">Options </p>
+                                <div ng-repeat="option in models.selected.options">
+                                    <input type="text" ng-model="option.name">
+                                    <div class="icon-group">
+                                        <button ng-click="models.addCheckboxOption(models.selected.options)">Add</button>
+                                        <button ng-click="models.removeCheckboxOption(models.selected.options)">Remove</button>
+                                    </div>
+                                </div>
+                                <div class="prop-title-div">Default Value </div>
+                                <textarea></textarea>
+                            </div>
+
+                            <div ng-if="models.selected.type == 'checkboxList'">
+                                <div class="prop-title-div"> lable </div>
+                                <input type="text" placeholder="Name" ng-model="models.selected.name" />
+                                <div class="prop-title-div">Field Options </div>
+                                <div>
+                                    <span class="chk-box-width"><input type="checkbox" ng-model="models.selected.Feild.Required"> Required</span>
+                                    <span class="chk-box-width"><input type="checkbox" ng-model="models.selected.Feild.Hidden"> Hidden</span>
+                                    <span class="chk-box-width"><input type="checkbox" ng-model="models.selected.Feild.Unique"> Unique</span>
+                                    <span class="chk-box-width"><input type="checkbox" ng-model="models.selected.Feild.Hide"> Hide</span>
+                                    <span class="chk-box-width"><input type="checkbox" ng-model="models.selected.Feild.AddCheckAll"> AddCheckAll</span>
+                                </div>
+
+                                <div class="prop-title-div">Option Layout </div>
+                                <div>
+                                    <span class="chk-box-width"><input type="radio" ng-model="models.selected.layout" name="layoutType" value="Vertical"> Vertical : </span><br />
+                                    <span class="chk-box-width"><input type="radio" ng-model="models.selected.layout" name="layoutType" value="Horizontal"> Horizontal : </span><br />
+                                </div>
+                                <p class="prop-title-div">Options </p>
+                                <div ng-repeat="option in models.selected.options">
+                                    <input type="text" ng-model="option.name">
+                                    <div class="icon-group">
+                                        <button ng-click="models.addCheckboxOption(models.selected.options)">Add</button>
+                                        <button ng-click="models.removeCheckboxOption(models.selected.options)">Remove</button>
+                                    </div>
+                                </div>
+                                <div class="prop-title-div">Default Value </div>
+                                <textarea></textarea>
+                            </div>
+
+                            <div ng-if="models.selected.type == 'radio'">
+                                <label for="singleSelect"> Type: </label><br>
+                                <div class="prop-title-div"> lable </div>
+                                <input type="text" placeholder="Name" ng-model="models.selected.name" />
+                                <div class="prop-title-div">Field Options </div>
+                                <span class="chk-box-width"><input type="checkbox" ng-model="models.selected.Feild.Required"> Required</span>
+                                <span class="chk-box-width"><input type="checkbox" ng-model="models.selected.Feild.Hidden"> Hidden </span>
+                                <span class="chk-box-width"><input type="checkbox" ng-model="models.selected.Feild.Hide"> Hide Label </span>
+                                <span class="chk-box-width"><input type="checkbox" ng-model="models.selected.Feild.Hidden"> Unique </span>
+                                <div class="prop-title-div"> Option Layout </div>
+                                <span class="chk-box-width"><input type="radio" ng-model="models.selected.layout" name="layoutType" value="Vertical"> Vertical : </span><br />
+                                <span class="chk-box-width"><input type="radio" ng-model="models.selected.layout" name="layoutType" value="Horizontal"> Horizontal : </span><br />
+                                <p class="prop-title-div">Options </p>
+                                <div ng-repeat="option in models.selected.options">
+                                    <input type="text" name="" ng-model="option.name" style="margin-bottom:10px;">
+                                    <div class="icon-group">
+                                        <button ng-click="models.addRadioOption(models.selected.options)" class="btn btn-default">Add</button>
+                                        <button ng-click="models.removeRadioOption(models.selected.options, option.id)" ng-if="models.selected.options.length > 1" class="btn btn-default">Remove</button>
+                                        <button type="button" class="btn btn-info" data-toggle="modal" data-target="#myModal" ng-click="models.setSelectedOption(option)">Select Question</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div ng-if="models.selected.type == 'dropdown'">
+                                <label for="singleSelect"> Type: </label><br>
+                                <div class="prop-title-div"> lable </div>
+                                <input type="text" placeholder="Name" ng-model="models.selected.name" />
+                                <div class="prop-title-div">Field Options </div>
+                                <span class="chk-box-width"><input type="checkbox" ng-model="models.selected.Feild.Required"> Required</span>
+                                <span class="chk-box-width"><input type="checkbox" ng-model="models.selected.Feild.Hidden"> Hidden </span>
+                                <span class="chk-box-width"><input type="checkbox" ng-model="models.selected.Feild.Hide"> Hide Label </span>
+                                <span class="chk-box-width"><input type="checkbox" ng-model="models.selected.Feild.Hidden"> Unique </span>
+                                <p class="prop-title-div">Options </p>
+                                <div ng-repeat="option in models.selected.options">
+                                    <input type="text" name="" ng-model="option.name">
+                                    <div class="icon-group">
+                                        <button ng-click="models.adddropdownOption(models.selected.options)">Add</button>
+                                        <button ng-click="models.removedropdownOption(models.selected.options)">Remove</button>
+                                        <button type="button" class="btn btn-info" data-toggle="modal" data-target="#myModal" ng-click="models.setSelectedOption(option)">Select Question</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div ng-if="models.selected.type == 'signature'">
+                                <label for="singleSelect"> Type: </label><br>
+                                <div class="prop-title-div"> lable </div>
+                                <input type="text" placeholder="Name" ng-model="models.selected.name" />
+                                <div class="prop-title-div">Field Options </div>
+                                <span class="chk-box-width"><input type="checkbox" ng-model="models.selected.Feild.Required"> Required</span>
+                                <span class="chk-box-width"><input type="checkbox" ng-model="models.selected.Feild.Hidden"> Hidden </span>
+                                <span class="chk-box-width"><input type="checkbox" ng-model="models.selected.Feild.Hide"> Hide Label </span>
+                                <div>
+                                    <div class="prop-title-div">Supporting Text</div>
+                                    <input type="text" ng-model="models.selected.supportingText" />
+                                </div>
+                            </div>
+
+                            <div ng-if="models.selected.type == 'longtext'">
+                                <label for="singleSelect"> Type: </label><br>
+                                <div class="prop-title-div"> lable </div>
+                                <input type="text" placeholder="Name" ng-model="models.selected.name" />
+                                <div class="prop-title-div">Field Options </div>
+                                <span class="chk-box-width"><input type="checkbox" ng-model="models.selected.Feild.Required"> Required</span>
+                                <span class="chk-box-width"><input type="checkbox" ng-model="models.selected.Feild.Hidden"> Hidden </span>
+                                <span class="chk-box-width"><input type="checkbox" ng-model="models.selected.Feild.ReadOnly"> Read-Only </span>
+                                <span class="chk-box-width"><input type="checkbox" ng-model="models.selected.Feild.Hide"> Hide Label </span>
+                                <div>
+                                    <div class="prop-title-div">Supporting Text</div>
+                                    <input type="text" ng-model="models.selected.supportingText" />
+                                </div>
+                                <div>
+                                    <div class="prop-title-div">Placeholder</div>
+                                    <input type="text" ng-model="models.selected.placeholder" />
+                                </div>
+                                <div>
+                                    <div class="prop-title-div">Default Value</div>
+                                    <textarea rows="2" cols="50" style="width: 18.5em;" ng-model="models.selected.defaultValue"></textarea>
+                                </div>
+                            </div>
+                            <div ng-if="models.selected.type == 'file'">
+                                <label for="singleSelect"> Type: </label><br>
+                                <div class="prop-title-div"> lable </div>
+                                <input type="text" placeholder="Name" ng-model="models.selected.name" />
+                                <div class="prop-title-div">Field Options </div>
+                                <span class="chk-box-width"><input type="checkbox" ng-model="models.selected.Feild.Required"> Required</span>
+                                <span class="chk-box-width"><input type="checkbox" ng-model="models.selected.Feild.Hidden"> Hidden </span>
+                                <span class="chk-box-width"><input type="checkbox" ng-model="models.selected.Feild.Hide"> Hide Label </span>
+                                <div>
+                                    <div class="prop-title-div">Supporting Text</div>
+                                    <input type="text" ng-model="models.selected.supportingText" />
+                                </div>
+                                <div>
+                                    <div class="prop-title-div">File Types</div>
+                                    <input type="text" ng-model="models.selected.fileTypes" />
+                                </div>
+                            </div>
+                            <div ng-if="models.selected.type == 'dateTime'">
+                                <label for="singleSelect"> Type: </label><br>
+                                <div class="prop-title-div"> lable </div>
+                                <input type="text" placeholder="Name" ng-model="models.selected.name" />
+                                <div class="prop-title-div">Field Options </div>
+                                <span class="chk-box-width"><input type="checkbox" ng-model="models.selected.Feild.Required"> Required</span>
+                                <span class="chk-box-width"><input type="checkbox" ng-model="models.selected.Feild.Hidden"> Hidden </span>
+                                <span class="chk-box-width"><input type="checkbox" ng-model="models.selected.Feild.ReadOnly"> Read-Only </span>
+                                <span class="chk-box-width"><input type="checkbox" ng-model="models.selected.Feild.ReadOnly"> Unique </span>
+                                <span class="chk-box-width"><input type="checkbox" ng-model="models.selected.Feild.Hide"> Hide Label </span>
+                                <div>
+                                    <div class="prop-title-div">Supporting Text</div>
+                                    <input type="text" ng-model="models.selected.supportingText" />
+                                </div>
+
+                            </div>
+
+                            <div ng-if="models.selected.type == 'container'">
+                                <label for="singleSelect"> Type: </label><br>
+                                <div class="prop-title-div"> lable </div>
+                                <input type="text" placeholder="Name" ng-model="models.selected.name" />
+                                <div class="prop-title-div">Field Options </div>
+                                <span class="chk-box-width"><input type="checkbox" ng-model="models.selected.Feild.Required"> Required</span>
+                                <div>
+                                    <div class="prop-title-div">Supporting Text</div>
+                                    <input type="text" ng-model="models.selected.supportingText" />
+                                </div>
+                            </div>
+
+                            <div ng-if="models.selected.type == 'name'">
+
+                                <div class="prop-title-div"> lable </div>
+                                <input type="text" placeholder="Name" ng-model="models.selected.name" />
+                                <div class="prop-title-div">Field Options </div>
+                                <span class="chk-box-width"><input type="checkbox" ng-model="models.selected.Feild.Required"> Required</span>
+                                <span class="chk-box-width"><input type="checkbox" ng-model="models.selected.Feild.Hidden"> Hidden </span>
+                                <span class="chk-box-width"><input type="checkbox" ng-model="models.selected.Feild.Hide"> Hide Label </span>
+                                <div class="prop-title-div"> Optional Sub-fields </div>
+                                <span class="chk-box-width"><input type="checkbox" ng-model="models.selected.SubFields.Suffix"> Suffix</span>
+                                <span class="chk-box-width"><input type="checkbox" ng-model="models.selected.SubFields.Prefix"> Prefix</span>
+                                <span class="chk-box-width"><input type="checkbox" ng-model="models.selected.SubFields.MiddleName"> Middle Name</span>
+                                <span class="chk-box-width"><input type="checkbox" ng-model="models.selected.SubFields.MiddleInitial"> Middle Initial</span>
+                            </div>
+                            <div ng-if="models.selected.type == 'address'">
+
+                                <div class="prop-title-div"> lable </div>
+                                <input type="text" placeholder="Name" ng-model="models.selected.name" />
+                                <div class="prop-title-div">Field Options </div>
+                                <span class="chk-box-width"><input type="checkbox" ng-model="models.selected.Feild.Required"> Required</span>
+                                <span class="chk-box-width"><input type="checkbox" ng-model="models.selected.Feild.Hidden"> Hidden </span>
+                                <span class="chk-box-width"><input type="checkbox" ng-model="models.selected.Feild.Hide"> Hide Label </span>
+                            </div>
+
+                            <div ng-if="models.selected.type == 'rating'">
+                                <div class="prop-title-div"> lable </div>
+                                <input type="text" placeholder="Name" ng-model="models.selected.name" />
+                                <div class="prop-title-div">Field Options </div>
+                                <span class="chk-box-width"><input type="checkbox" ng-model="models.selected.Feild.Required"> Required</span>
+                                <span class="chk-box-width"><input type="checkbox" ng-model="models.selected.Feild.Hide"> Hide Label </span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+</body>
+
+</html>
+
+
